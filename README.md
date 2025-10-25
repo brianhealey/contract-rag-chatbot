@@ -368,7 +368,6 @@ MIT
 
 ## Acknowledgments
 
-- Based on architecture patterns from the bible-rag project
 - Uses open-source models from Sentence-Transformers
 - Powered by Qdrant vector database
 - LLM inference via Ollama
