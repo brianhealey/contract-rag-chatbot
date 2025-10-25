@@ -14,12 +14,7 @@ class QueryCache:
     Disk-based cache for query results with TTL support.
     """
 
-    def __init__(
-        self,
-        cache_dir: str = None,
-        ttl: int = None,
-        enabled: bool = None
-    ):
+    def __init__(self, cache_dir: str = None, ttl: int = None, enabled: bool = None):
         """
         Initialize the query cache.
 
@@ -30,20 +25,24 @@ class QueryCache:
         """
         self.cache_dir = cache_dir or settings.cache.cache_dir
         self.ttl = ttl if ttl is not None else settings.cache.query_cache_ttl
-        self.enabled = enabled if enabled is not None else settings.cache.enable_query_cache
+        self.enabled = (
+            enabled if enabled is not None else settings.cache.enable_query_cache
+        )
 
         if self.enabled:
             self.cache = Cache(self.cache_dir)
             print(f"Query cache initialized at: {self.cache_dir}")
-            print(f"Cache TTL: {self.ttl}s ({self.ttl/3600:.1f} hours)" if self.ttl > 0 else "Cache TTL: No expiration")
+            print(
+                f"Cache TTL: {self.ttl}s ({self.ttl/3600:.1f} hours)"
+                if self.ttl > 0
+                else "Cache TTL: No expiration"
+            )
         else:
             self.cache = None
             print("Query cache disabled")
 
     def _generate_cache_key(
-        self,
-        query: str,
-        params: Optional[Dict[str, Any]] = None
+        self, query: str, params: Optional[Dict[str, Any]] = None
     ) -> str:
         """
         Generate a cache key for a query and parameters.
@@ -66,9 +65,7 @@ class QueryCache:
         return hashlib.md5(key_string.encode()).hexdigest()
 
     def get(
-        self,
-        query: str,
-        params: Optional[Dict[str, Any]] = None
+        self, query: str, params: Optional[Dict[str, Any]] = None
     ) -> Optional[List[Dict[str, Any]]]:
         """
         Get cached results for a query.
@@ -96,7 +93,7 @@ class QueryCache:
         self,
         query: str,
         results: List[Dict[str, Any]],
-        params: Optional[Dict[str, Any]] = None
+        params: Optional[Dict[str, Any]] = None,
     ):
         """
         Cache results for a query.
@@ -129,7 +126,7 @@ class QueryCache:
             "enabled": True,
             "size": len(self.cache),
             "directory": self.cache_dir,
-            "ttl": self.ttl
+            "ttl": self.ttl,
         }
 
 
@@ -145,13 +142,11 @@ def main():
     params1 = {"top_k": 5, "use_reranking": True}
     results1 = [
         {"id": "chunk_001", "text": "Payment within 30 days", "score": 0.9},
-        {"id": "chunk_002", "text": "Late fees apply", "score": 0.7}
+        {"id": "chunk_002", "text": "Late fees apply", "score": 0.7},
     ]
 
     query2 = "What are the termination clauses?"
-    results2 = [
-        {"id": "chunk_010", "text": "60 days notice required", "score": 0.85}
-    ]
+    results2 = [{"id": "chunk_010", "text": "60 days notice required", "score": 0.85}]
 
     # Test cache set
     print("Setting cache for query 1...")

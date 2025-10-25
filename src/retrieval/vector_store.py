@@ -12,7 +12,7 @@ from qdrant_client.models import (
     Filter,
     FieldCondition,
     MatchValue,
-    SearchParams
+    SearchParams,
 )
 from qdrant_client.http import models
 
@@ -29,7 +29,7 @@ class VectorStore:
         collection_name: str = None,
         embedding_dim: int = None,
         host: str = None,
-        port: int = None
+        port: int = None,
     ):
         """
         Initialize the vector store.
@@ -62,9 +62,8 @@ class VectorStore:
             self.client.create_collection(
                 collection_name=self.collection_name,
                 vectors_config=VectorParams(
-                    size=self.embedding_dim,
-                    distance=Distance.COSINE
-                )
+                    size=self.embedding_dim, distance=Distance.COSINE
+                ),
             )
             print(f"Collection '{self.collection_name}' created successfully.")
         else:
@@ -74,7 +73,7 @@ class VectorStore:
         self,
         ids: List[str],
         embeddings: List[np.ndarray],
-        payloads: List[Dict[str, Any]]
+        payloads: List[Dict[str, Any]],
     ) -> bool:
         """
         Add documents to the vector store.
@@ -93,16 +92,17 @@ class VectorStore:
         points = [
             PointStruct(
                 id=id_,
-                vector=embedding.tolist() if isinstance(embedding, np.ndarray) else embedding,
-                payload=payload
+                vector=(
+                    embedding.tolist()
+                    if isinstance(embedding, np.ndarray)
+                    else embedding
+                ),
+                payload=payload,
             )
             for id_, embedding, payload in zip(ids, embeddings, payloads)
         ]
 
-        self.client.upsert(
-            collection_name=self.collection_name,
-            points=points
-        )
+        self.client.upsert(collection_name=self.collection_name, points=points)
 
         print(f"Added {len(points)} documents to collection '{self.collection_name}'")
         return True
@@ -111,7 +111,7 @@ class VectorStore:
         self,
         query_vector: np.ndarray,
         top_k: int = 10,
-        filter_conditions: Optional[Dict[str, Any]] = None
+        filter_conditions: Optional[Dict[str, Any]] = None,
     ) -> List[Dict[str, Any]]:
         """
         Search for similar documents.
@@ -128,10 +128,7 @@ class VectorStore:
         query_filter = None
         if filter_conditions:
             must_conditions = [
-                FieldCondition(
-                    key=key,
-                    match=MatchValue(value=value)
-                )
+                FieldCondition(key=key, match=MatchValue(value=value))
                 for key, value in filter_conditions.items()
             ]
             query_filter = Filter(must=must_conditions)
@@ -139,20 +136,20 @@ class VectorStore:
         # Perform search
         search_result = self.client.search(
             collection_name=self.collection_name,
-            query_vector=query_vector.tolist() if isinstance(query_vector, np.ndarray) else query_vector,
+            query_vector=(
+                query_vector.tolist()
+                if isinstance(query_vector, np.ndarray)
+                else query_vector
+            ),
             limit=top_k,
             query_filter=query_filter,
-            search_params=SearchParams(hnsw_ef=128)
+            search_params=SearchParams(hnsw_ef=128),
         )
 
         # Format results
         results = []
         for hit in search_result:
-            result = {
-                "id": hit.id,
-                "score": hit.score,
-                **hit.payload
-            }
+            result = {"id": hit.id, "score": hit.score, **hit.payload}
             results.append(result)
 
         return results
@@ -169,9 +166,7 @@ class VectorStore:
         """
         self.client.delete(
             collection_name=self.collection_name,
-            points_selector=models.PointIdsList(
-                points=ids
-            )
+            points_selector=models.PointIdsList(points=ids),
         )
         print(f"Deleted {len(ids)} documents from collection '{self.collection_name}'")
         return True
@@ -203,7 +198,7 @@ class VectorStore:
             "name": self.collection_name,
             "points_count": collection_info.points_count,
             "vectors_count": collection_info.vectors_count,
-            "status": collection_info.status
+            "status": collection_info.status,
         }
 
 
@@ -222,18 +217,18 @@ def main():
         {
             "id": "doc1",
             "text": "This contract specifies payment terms of 30 days.",
-            "metadata": {"document_name": "contract_001.pdf", "section": "payment"}
+            "metadata": {"document_name": "contract_001.pdf", "section": "payment"},
         },
         {
             "id": "doc2",
             "text": "The agreement is governed by California law.",
-            "metadata": {"document_name": "contract_001.pdf", "section": "legal"}
+            "metadata": {"document_name": "contract_001.pdf", "section": "legal"},
         },
         {
             "id": "doc3",
             "text": "Termination requires 60 days written notice.",
-            "metadata": {"document_name": "contract_002.pdf", "section": "termination"}
-        }
+            "metadata": {"document_name": "contract_002.pdf", "section": "termination"},
+        },
     ]
 
     # Generate embeddings
@@ -244,10 +239,7 @@ def main():
     # Add to vector store
     print("\nAdding documents to vector store...")
     ids = [doc["id"] for doc in documents]
-    payloads = [
-        {"text": doc["text"], **doc["metadata"]}
-        for doc in documents
-    ]
+    payloads = [{"text": doc["text"], **doc["metadata"]} for doc in documents]
     vector_store.add_documents(ids, embeddings, payloads)
 
     # Get collection info
@@ -276,7 +268,7 @@ def main():
     results = vector_store.search(
         query_embedding,
         top_k=5,
-        filter_conditions={"document_name": "contract_001.pdf"}
+        filter_conditions={"document_name": "contract_001.pdf"},
     )
     print(f"Found {len(results)} results")
 

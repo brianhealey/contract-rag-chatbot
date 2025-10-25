@@ -36,7 +36,7 @@ def add_documents(file_paths: List[str]):
             print(f"Warning: File not found: {file_path}")
             continue
 
-        file_type = path.suffix.lstrip('.').lower()
+        file_type = path.suffix.lstrip(".").lower()
         if file_type not in settings.document.supported_formats:
             print(f"Warning: Unsupported format: {file_path} ({file_type})")
             continue
@@ -66,7 +66,7 @@ def add_documents(file_paths: List[str]):
     print(f"Current index size: {initial_count} chunks")
 
     # Parse documents
-    print(f"\n[2/5] Parsing documents...")
+    print("\n[2/5] Parsing documents...")
     documents = []
     for file_path in valid_files:
         try:
@@ -83,33 +83,28 @@ def add_documents(file_paths: List[str]):
     print(f"Parsed {len(documents)} document(s)")
 
     # Chunk documents
-    print(f"\n[3/5] Chunking documents...")
+    print("\n[3/5] Chunking documents...")
     doc_dicts = [
-        {
-            "id": doc.id,
-            "text": doc.text,
-            "metadata": doc.metadata
-        }
-        for doc in documents
+        {"id": doc.id, "text": doc.text, "metadata": doc.metadata} for doc in documents
     ]
 
     chunks = chunker.chunk_documents(doc_dicts)
     print(f"Generated {len(chunks)} chunks")
 
     # Generate embeddings
-    print(f"\n[4/5] Generating embeddings...")
+    print("\n[4/5] Generating embeddings...")
     chunk_texts = [chunk.text for chunk in chunks]
     embeddings = embedder.embed_batch(chunk_texts, show_progress=True)
 
     # Add to vector store
-    print(f"\n[5/5] Adding to vector store...")
+    print("\n[5/5] Adding to vector store...")
     chunk_ids = [chunk.id for chunk in chunks]
     chunk_payloads = [
         {
             "text": chunk.text,
             "chunk_index": chunk.chunk_index,
             "document_id": chunk.document_id,
-            **chunk.metadata
+            **chunk.metadata,
         }
         for chunk in chunks
     ]
@@ -132,6 +127,7 @@ def add_documents(file_paths: List[str]):
 
         # Rebuild BM25 with updated corpus
         from rank_bm25 import BM25Okapi
+
         hybrid_search.bm25 = BM25Okapi(hybrid_search.bm25_corpus)
 
         # Save updated index
@@ -167,10 +163,7 @@ def main():
     )
 
     parser.add_argument(
-        "files",
-        nargs="+",
-        type=str,
-        help="Paths to document files to add"
+        "files", nargs="+", type=str, help="Paths to document files to add"
     )
 
     args = parser.parse_args()
@@ -182,6 +175,7 @@ def main():
     except Exception as e:
         print(f"\n\nError adding documents: {e}")
         import traceback
+
         traceback.print_exc()
         exit(1)
 

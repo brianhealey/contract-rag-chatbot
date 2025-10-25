@@ -32,7 +32,7 @@ class DocumentChunker:
         self,
         chunk_size: int = None,
         chunk_overlap: int = None,
-        separators: List[str] = None
+        separators: List[str] = None,
     ):
         """
         Initialize the chunker.
@@ -49,12 +49,7 @@ class DocumentChunker:
         if self.chunk_overlap >= self.chunk_size:
             raise ValueError("chunk_overlap must be less than chunk_size")
 
-    def _generate_chunk_id(
-        self,
-        document_id: str,
-        chunk_index: int,
-        text: str
-    ) -> str:
+    def _generate_chunk_id(self, document_id: str, chunk_index: int, text: str) -> str:
         """
         Generate a unique ID for a chunk.
 
@@ -111,9 +106,7 @@ class DocumentChunker:
                 final_splits.append(split)
             else:
                 # Split is too large, recurse with next separator
-                final_splits.extend(
-                    self._split_text(split, remaining_separators)
-                )
+                final_splits.extend(self._split_text(split, remaining_separators))
 
         return final_splits
 
@@ -165,10 +158,7 @@ class DocumentChunker:
         return chunks
 
     def chunk_text(
-        self,
-        text: str,
-        document_id: str,
-        document_metadata: Dict[str, Any] = None
+        self, text: str, document_id: str, document_metadata: Dict[str, Any] = None
     ) -> List[Chunk]:
         """
         Split text into chunks with metadata.
@@ -196,7 +186,7 @@ class DocumentChunker:
             chunk_metadata = {
                 "chunk_size": len(chunk_text),
                 "total_chunks": len(chunk_texts),
-                **(document_metadata or {})
+                **(document_metadata or {}),
             }
 
             chunk = Chunk(
@@ -204,16 +194,13 @@ class DocumentChunker:
                 text=chunk_text.strip(),
                 chunk_index=i,
                 document_id=document_id,
-                metadata=chunk_metadata
+                metadata=chunk_metadata,
             )
             chunks.append(chunk)
 
         return chunks
 
-    def chunk_documents(
-        self,
-        documents: List[Dict[str, Any]]
-    ) -> List[Chunk]:
+    def chunk_documents(self, documents: List[Dict[str, Any]]) -> List[Chunk]:
         """
         Chunk multiple documents.
 
@@ -292,17 +279,15 @@ def main():
     document_metadata = {
         "source_file": "test_contract.txt",
         "file_type": "txt",
-        "document_type": "Master Service Agreement"
+        "document_type": "Master Service Agreement",
     }
 
     chunks = chunker.chunk_text(
-        text=test_text,
-        document_id="test_doc_001",
-        document_metadata=document_metadata
+        text=test_text, document_id="test_doc_001", document_metadata=document_metadata
     )
 
     # Display results
-    print(f"=== Chunking Results ===")
+    print("=== Chunking Results ===")
     print(f"Generated {len(chunks)} chunks\n")
 
     for i, chunk in enumerate(chunks, 1):

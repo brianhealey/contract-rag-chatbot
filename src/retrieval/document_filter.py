@@ -2,11 +2,9 @@
 Document filtering and comparison utilities.
 """
 
-from typing import List, Dict, Any, Optional, Set
-from pathlib import Path
+from typing import List, Dict, Any
 
 from src.retrieval.vector_store import VectorStore
-from config.settings import settings
 
 
 class DocumentFilter:
@@ -41,23 +39,23 @@ class DocumentFilter:
                     limit=100,
                     offset=offset,
                     with_payload=True,
-                    with_vectors=False
+                    with_vectors=False,
                 )
 
                 for point in result[0]:
                     payload = point.payload
-                    source_file = payload.get('source_file', 'Unknown')
-                    document_id = payload.get('document_id', 'Unknown')
+                    source_file = payload.get("source_file", "Unknown")
+                    document_id = payload.get("document_id", "Unknown")
 
                     if document_id not in documents:
                         documents[document_id] = {
-                            'document_id': document_id,
-                            'source_file': source_file,
-                            'file_path': payload.get('file_path', ''),
-                            'file_type': payload.get('file_type', ''),
-                            'file_size': payload.get('file_size', 0),
-                            'total_chunks': payload.get('total_chunks', 0),
-                            'parsed_at': payload.get('parsed_at', '')
+                            "document_id": document_id,
+                            "source_file": source_file,
+                            "file_path": payload.get("file_path", ""),
+                            "file_type": payload.get("file_type", ""),
+                            "file_size": payload.get("file_size", 0),
+                            "total_chunks": payload.get("total_chunks", 0),
+                            "parsed_at": payload.get("parsed_at", ""),
                         }
 
                 offset = result[1]
@@ -71,9 +69,7 @@ class DocumentFilter:
             return []
 
     def get_document_chunks(
-        self,
-        document_id: str = None,
-        source_file: str = None
+        self, document_id: str = None, source_file: str = None
     ) -> List[Dict[str, Any]]:
         """
         Get all chunks for a specific document.
@@ -98,34 +94,36 @@ class DocumentFilter:
                     limit=100,
                     offset=offset,
                     with_payload=True,
-                    with_vectors=False
+                    with_vectors=False,
                 )
 
                 for point in result[0]:
                     payload = point.payload
                     match = False
 
-                    if document_id and payload.get('document_id') == document_id:
+                    if document_id and payload.get("document_id") == document_id:
                         match = True
-                    elif source_file and payload.get('source_file') == source_file:
+                    elif source_file and payload.get("source_file") == source_file:
                         match = True
 
                     if match:
-                        chunks.append({
-                            'id': point.id,
-                            'chunk_index': payload.get('chunk_index', 0),
-                            'text': payload.get('text', ''),
-                            'source_file': payload.get('source_file', ''),
-                            'document_id': payload.get('document_id', ''),
-                            **payload
-                        })
+                        chunks.append(
+                            {
+                                "id": point.id,
+                                "chunk_index": payload.get("chunk_index", 0),
+                                "text": payload.get("text", ""),
+                                "source_file": payload.get("source_file", ""),
+                                "document_id": payload.get("document_id", ""),
+                                **payload,
+                            }
+                        )
 
                 offset = result[1]
                 if offset is None:
                     break
 
             # Sort by chunk index
-            chunks.sort(key=lambda x: x.get('chunk_index', 0))
+            chunks.sort(key=lambda x: x.get("chunk_index", 0))
             return chunks
 
         except Exception as e:
@@ -133,10 +131,7 @@ class DocumentFilter:
             return []
 
     def create_filter_condition(
-        self,
-        source_file: str = None,
-        document_id: str = None,
-        file_type: str = None
+        self, source_file: str = None, document_id: str = None, file_type: str = None
     ) -> Dict[str, Any]:
         """
         Create a filter condition for Qdrant search.
@@ -152,11 +147,11 @@ class DocumentFilter:
         conditions = {}
 
         if source_file:
-            conditions['source_file'] = source_file
+            conditions["source_file"] = source_file
         if document_id:
-            conditions['document_id'] = document_id
+            conditions["document_id"] = document_id
         if file_type:
-            conditions['file_type'] = file_type
+            conditions["file_type"] = file_type
 
         return conditions if conditions else None
 
@@ -165,7 +160,7 @@ class DocumentFilter:
         doc1_filter: Dict[str, Any],
         doc2_filter: Dict[str, Any],
         query: str,
-        top_k: int = 5
+        top_k: int = 5,
     ) -> Dict[str, Any]:
         """
         Compare two documents by retrieving relevant passages from each.
@@ -186,30 +181,26 @@ class DocumentFilter:
 
         # Search in first document
         results1 = self.vector_store.search(
-            query_vector=query_embedding,
-            top_k=top_k,
-            filter_conditions=doc1_filter
+            query_vector=query_embedding, top_k=top_k, filter_conditions=doc1_filter
         )
 
         # Search in second document
         results2 = self.vector_store.search(
-            query_vector=query_embedding,
-            top_k=top_k,
-            filter_conditions=doc2_filter
+            query_vector=query_embedding, top_k=top_k, filter_conditions=doc2_filter
         )
 
         return {
-            'query': query,
-            'document1': {
-                'filter': doc1_filter,
-                'results': results1,
-                'count': len(results1)
+            "query": query,
+            "document1": {
+                "filter": doc1_filter,
+                "results": results1,
+                "count": len(results1),
             },
-            'document2': {
-                'filter': doc2_filter,
-                'results': results2,
-                'count': len(results2)
-            }
+            "document2": {
+                "filter": doc2_filter,
+                "results": results2,
+                "count": len(results2),
+            },
         }
 
 
@@ -236,18 +227,16 @@ def main():
         # Test getting chunks from first document
         first_doc = documents[0]
         print(f"\n--- Chunks from: {first_doc['source_file']} ---")
-        chunks = filter_util.get_document_chunks(
-            document_id=first_doc['document_id']
-        )
+        chunks = filter_util.get_document_chunks(document_id=first_doc["document_id"])
         print(f"\nRetrieved {len(chunks)} chunks")
         for i, chunk in enumerate(chunks[:3], 1):
             print(f"\nChunk {chunk['chunk_index']}:")
             print(f"  {chunk['text'][:100]}...")
 
         # Test filter creation
-        print(f"\n--- Filter Conditions ---")
+        print("\n--- Filter Conditions ---")
         filter_cond = filter_util.create_filter_condition(
-            source_file=first_doc['source_file']
+            source_file=first_doc["source_file"]
         )
         print(f"Filter for '{first_doc['source_file']}':")
         print(f"  {filter_cond}")

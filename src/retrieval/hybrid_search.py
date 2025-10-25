@@ -23,7 +23,7 @@ class HybridSearch:
         self,
         embedder: Embedder = None,
         vector_store: VectorStore = None,
-        alpha: float = None
+        alpha: float = None,
     ):
         """
         Initialize hybrid search.
@@ -45,11 +45,7 @@ class HybridSearch:
 
         self.bm25_index_path = Path(settings.document.data_dir) / "bm25_index.pkl"
 
-    def build_bm25_index(
-        self,
-        documents: List[Dict[str, Any]],
-        save: bool = True
-    ):
+    def build_bm25_index(self, documents: List[Dict[str, Any]], save: bool = True):
         """
         Build BM25 index from documents.
 
@@ -85,12 +81,15 @@ class HybridSearch:
         """Save BM25 index to disk."""
         self.bm25_index_path.parent.mkdir(parents=True, exist_ok=True)
 
-        with open(self.bm25_index_path, 'wb') as f:
-            pickle.dump({
-                'bm25': self.bm25,
-                'corpus': self.bm25_corpus,
-                'doc_ids': self.bm25_doc_ids
-            }, f)
+        with open(self.bm25_index_path, "wb") as f:
+            pickle.dump(
+                {
+                    "bm25": self.bm25,
+                    "corpus": self.bm25_corpus,
+                    "doc_ids": self.bm25_doc_ids,
+                },
+                f,
+            )
 
         print(f"BM25 index saved to {self.bm25_index_path}")
 
@@ -105,12 +104,12 @@ class HybridSearch:
             print(f"BM25 index not found at {self.bm25_index_path}")
             return False
 
-        with open(self.bm25_index_path, 'rb') as f:
+        with open(self.bm25_index_path, "rb") as f:
             data = pickle.load(f)
 
-        self.bm25 = data['bm25']
-        self.bm25_corpus = data['corpus']
-        self.bm25_doc_ids = data['doc_ids']
+        self.bm25 = data["bm25"]
+        self.bm25_corpus = data["corpus"]
+        self.bm25_doc_ids = data["doc_ids"]
 
         print(f"BM25 index loaded with {len(self.bm25_corpus)} documents")
         return True
@@ -131,11 +130,7 @@ class HybridSearch:
 
         return (scores - scores.min()) / (scores.max() - scores.min())
 
-    def bm25_search(
-        self,
-        query: str,
-        top_k: int = 10
-    ) -> List[Dict[str, Any]]:
+    def bm25_search(self, query: str, top_k: int = 10) -> List[Dict[str, Any]]:
         """
         Perform BM25 keyword search.
 
@@ -162,10 +157,9 @@ class HybridSearch:
         results = []
         for idx in top_indices:
             if scores[idx] > 0:  # Only include non-zero scores
-                results.append({
-                    "id": self.bm25_doc_ids[idx],
-                    "score": float(scores[idx])
-                })
+                results.append(
+                    {"id": self.bm25_doc_ids[idx], "score": float(scores[idx])}
+                )
 
         return results
 
@@ -173,7 +167,7 @@ class HybridSearch:
         self,
         query: str,
         top_k: int = 10,
-        filter_conditions: Optional[Dict[str, Any]] = None
+        filter_conditions: Optional[Dict[str, Any]] = None,
     ) -> List[Dict[str, Any]]:
         """
         Perform vector similarity search.
@@ -193,7 +187,7 @@ class HybridSearch:
         results = self.vector_store.search(
             query_vector=query_embedding,
             top_k=top_k,
-            filter_conditions=filter_conditions
+            filter_conditions=filter_conditions,
         )
 
         return results
@@ -203,7 +197,7 @@ class HybridSearch:
         query: str,
         top_k: int = None,
         alpha: float = None,
-        filter_conditions: Optional[Dict[str, Any]] = None
+        filter_conditions: Optional[Dict[str, Any]] = None,
     ) -> List[Dict[str, Any]]:
         """
         Perform hybrid search combining vector and BM25.
@@ -225,9 +219,7 @@ class HybridSearch:
 
         # Perform both searches
         vector_results = self.vector_search(
-            query,
-            top_k=retrieval_k,
-            filter_conditions=filter_conditions
+            query, top_k=retrieval_k, filter_conditions=filter_conditions
         )
         bm25_results = self.bm25_search(query, top_k=retrieval_k)
 
@@ -267,14 +259,13 @@ class HybridSearch:
                 # Fetch it directly from vector store
                 try:
                     point = self.vector_store.client.retrieve(
-                        collection_name=self.vector_store.collection_name,
-                        ids=[doc_id]
+                        collection_name=self.vector_store.collection_name, ids=[doc_id]
                     )
                     if point and len(point) > 0:
                         doc_info = {
                             "id": point[0].id,
                             "score": 0.0,  # No vector score for this doc
-                            **point[0].payload
+                            **point[0].payload,
                         }
                     else:
                         # Still not found, skip this document
@@ -284,12 +275,14 @@ class HybridSearch:
                     print(f"Warning: Could not retrieve document {doc_id}: {e}")
                     continue
 
-            hybrid_results.append({
-                **doc_info,
-                "hybrid_score": hybrid_score,
-                "vector_score": v_score,
-                "bm25_score": b_score
-            })
+            hybrid_results.append(
+                {
+                    **doc_info,
+                    "hybrid_score": hybrid_score,
+                    "vector_score": v_score,
+                    "bm25_score": b_score,
+                }
+            )
 
         # Sort by hybrid score and return top-k
         hybrid_results.sort(key=lambda x: x["hybrid_score"], reverse=True)
@@ -310,23 +303,23 @@ def main():
         {
             "id": "chunk_001",
             "text": "Payment terms: The Company shall pay Service Provider within 30 days of invoice date.",
-            "source_file": "contract_001.pdf"
+            "source_file": "contract_001.pdf",
         },
         {
             "id": "chunk_002",
             "text": "This Agreement is governed by the laws of the State of California.",
-            "source_file": "contract_001.pdf"
+            "source_file": "contract_001.pdf",
         },
         {
             "id": "chunk_003",
             "text": "Termination clause: Either party may terminate with 60 days written notice.",
-            "source_file": "contract_002.pdf"
+            "source_file": "contract_002.pdf",
         },
         {
             "id": "chunk_004",
             "text": "Confidentiality: All proprietary information must remain confidential.",
-            "source_file": "contract_002.pdf"
-        }
+            "source_file": "contract_002.pdf",
+        },
     ]
 
     # Build indices
@@ -339,7 +332,9 @@ def main():
     texts = [doc["text"] for doc in documents]
     embeddings = embedder.embed_batch(texts)
     ids = [doc["id"] for doc in documents]
-    payloads = [{"text": doc["text"], "source_file": doc["source_file"]} for doc in documents]
+    payloads = [
+        {"text": doc["text"], "source_file": doc["source_file"]} for doc in documents
+    ]
     vector_store.add_documents(ids, embeddings, payloads)
 
     # Test search
@@ -352,7 +347,9 @@ def main():
     print(f"Top {len(results)} results:\n")
     for i, result in enumerate(results, 1):
         print(f"{i}. Hybrid Score: {result['hybrid_score']:.4f}")
-        print(f"   Vector: {result.get('vector_score', 0):.4f}, BM25: {result.get('bm25_score', 0):.4f}")
+        print(
+            f"   Vector: {result.get('vector_score', 0):.4f}, BM25: {result.get('bm25_score', 0):.4f}"
+        )
         print(f"   Text: {result['text']}")
         print(f"   Source: {result['source_file']}")
         print()

@@ -2,22 +2,13 @@
 Multi-format document parser supporting PDF, HTML, TXT, DOCX, and more.
 """
 
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 from pathlib import Path
 import hashlib
 from dataclasses import dataclass
 from datetime import datetime
 
-try:
-    from unstructured.partition.auto import partition
-    from unstructured.partition.html import partition_html
-    from unstructured.partition.text import partition_text
-    from unstructured.partition.docx import partition_docx
-    UNSTRUCTURED_AVAILABLE = True
-except ImportError:
-    UNSTRUCTURED_AVAILABLE = False
-
-# Fallback parsers
+# Document parsing libraries
 import pdfplumber
 from bs4 import BeautifulSoup
 import docx
@@ -71,7 +62,7 @@ class DocumentParser:
 
     def _get_file_type(self, file_path: Path) -> str:
         """Get the file type from extension."""
-        return file_path.suffix.lstrip('.').lower()
+        return file_path.suffix.lstrip(".").lower()
 
     def _parse_pdf_with_pdfplumber(self, file_path: Path) -> str:
         """Parse PDF using pdfplumber."""
@@ -85,12 +76,12 @@ class DocumentParser:
 
     def _parse_html(self, file_path: Path) -> str:
         """Parse HTML using BeautifulSoup."""
-        with open(file_path, 'r', encoding='utf-8') as f:
-            soup = BeautifulSoup(f.read(), 'html.parser')
+        with open(file_path, "r", encoding="utf-8") as f:
+            soup = BeautifulSoup(f.read(), "html.parser")
             # Remove script and style elements
             for script in soup(["script", "style"]):
                 script.decompose()
-            return soup.get_text(separator='\n\n')
+            return soup.get_text(separator="\n\n")
 
     def _parse_docx(self, file_path: Path) -> str:
         """Parse DOCX using python-docx."""
@@ -128,19 +119,19 @@ class DocumentParser:
 
         # Parse based on file type
         try:
-            if file_type == 'pdf':
+            if file_type == "pdf":
                 # Use pdfplumber for reliable PDF parsing
                 text = self._parse_pdf_with_pdfplumber(file_path)
-            elif file_type == 'html':
+            elif file_type == "html":
                 text = self._parse_html(file_path)
-            elif file_type == 'txt' or file_type == 'md':
-                with open(file_path, 'r', encoding='utf-8') as f:
+            elif file_type == "txt" or file_type == "md":
+                with open(file_path, "r", encoding="utf-8") as f:
                     text = f.read()
-            elif file_type == 'docx':
+            elif file_type == "docx":
                 text = self._parse_docx(file_path)
             else:
                 # Try reading as text
-                with open(file_path, 'r', encoding='utf-8') as f:
+                with open(file_path, "r", encoding="utf-8") as f:
                     text = f.read()
 
         except Exception as e:
@@ -154,7 +145,7 @@ class DocumentParser:
             "file_type": file_type,
             "file_size": file_path.stat().st_size,
             "parsed_at": datetime.now().isoformat(),
-            "text_length": len(text)
+            "text_length": len(text),
         }
 
         # Generate document ID
@@ -166,13 +157,11 @@ class DocumentParser:
             metadata=metadata,
             source_file=file_path.name,
             file_type=file_type,
-            parsed_at=datetime.now().isoformat()
+            parsed_at=datetime.now().isoformat(),
         )
 
     def parse_directory(
-        self,
-        directory: str = None,
-        recursive: bool = False
+        self, directory: str = None, recursive: bool = False
     ) -> List[Document]:
         """
         Parse all supported documents in a directory.
@@ -212,9 +201,7 @@ class DocumentParser:
         return documents
 
     def get_file_list(
-        self,
-        directory: str = None,
-        recursive: bool = False
+        self, directory: str = None, recursive: bool = False
     ) -> List[Path]:
         """
         Get list of supported document files in a directory.
@@ -259,7 +246,7 @@ def main():
         print(f"  - {file.name} ({file.suffix})")
 
     # Parse all documents
-    print(f"\n=== Parsing Documents ===\n")
+    print("\n=== Parsing Documents ===\n")
     documents = parser.parse_directory()
 
     # Display results

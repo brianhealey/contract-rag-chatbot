@@ -4,7 +4,6 @@ Re-ranking module using cross-encoder models for improved relevance scoring.
 
 from typing import List, Dict, Any
 from sentence_transformers import CrossEncoder
-import numpy as np
 
 from config.settings import settings
 
@@ -17,11 +16,7 @@ class Reranker:
     more accurate relevance scoring than bi-encoder similarity.
     """
 
-    def __init__(
-        self,
-        model_name: str = None,
-        device: str = None
-    ):
+    def __init__(self, model_name: str = None, device: str = None):
         """
         Initialize the re-ranker.
 
@@ -41,7 +36,7 @@ class Reranker:
         query: str,
         results: List[Dict[str, Any]],
         top_k: int = None,
-        text_key: str = "text"
+        text_key: str = "text",
     ) -> List[Dict[str, Any]]:
         """
         Re-rank search results using cross-encoder.
@@ -87,7 +82,7 @@ class Reranker:
         results: List[Dict[str, Any]],
         threshold: float = 0.0,
         top_k: int = None,
-        text_key: str = "text"
+        text_key: str = "text",
     ) -> List[Dict[str, Any]]:
         """
         Re-rank and filter results by minimum score threshold.
@@ -129,37 +124,39 @@ def main():
             "id": "chunk_001",
             "text": "Payment terms: The Company shall pay Service Provider within 30 days of invoice date.",
             "source_file": "contract_001.pdf",
-            "initial_score": 0.85
+            "initial_score": 0.85,
         },
         {
             "id": "chunk_002",
             "text": "This Agreement is governed by the laws of the State of California.",
             "source_file": "contract_001.pdf",
-            "initial_score": 0.45
+            "initial_score": 0.45,
         },
         {
             "id": "chunk_003",
             "text": "Late payments shall incur interest at 1.5% per month.",
             "source_file": "contract_001.pdf",
-            "initial_score": 0.72
+            "initial_score": 0.72,
         },
         {
             "id": "chunk_004",
             "text": "Confidentiality: All proprietary information must remain confidential.",
             "source_file": "contract_002.pdf",
-            "initial_score": 0.30
+            "initial_score": 0.30,
         },
         {
             "id": "chunk_005",
             "text": "Invoices must be submitted by the 5th of each month for payment processing.",
             "source_file": "contract_002.pdf",
-            "initial_score": 0.68
-        }
+            "initial_score": 0.68,
+        },
     ]
 
     print(f"Query: {query}\n")
-    print(f"=== Before Re-ranking (sorted by initial_score) ===\n")
-    for i, result in enumerate(sorted(results, key=lambda x: x["initial_score"], reverse=True), 1):
+    print("=== Before Re-ranking (sorted by initial_score) ===\n")
+    for i, result in enumerate(
+        sorted(results, key=lambda x: x["initial_score"], reverse=True), 1
+    ):
         print(f"{i}. Score: {result['initial_score']:.2f}")
         print(f"   Text: {result['text'][:80]}...")
         print()
@@ -167,14 +164,16 @@ def main():
     # Re-rank
     reranked = reranker.rerank(query, results, top_k=5)
 
-    print(f"=== After Re-ranking (sorted by rerank_score) ===\n")
+    print("=== After Re-ranking (sorted by rerank_score) ===\n")
     for i, result in enumerate(reranked, 1):
-        print(f"{i}. Rerank Score: {result['rerank_score']:.4f} (Initial: {result['initial_score']:.2f})")
+        print(
+            f"{i}. Rerank Score: {result['rerank_score']:.4f} (Initial: {result['initial_score']:.2f})"
+        )
         print(f"   Text: {result['text'][:80]}...")
         print()
 
     # Test with threshold
-    print(f"=== Re-ranking with threshold (>= 0.5) ===\n")
+    print("=== Re-ranking with threshold (>= 0.5) ===\n")
     filtered = reranker.rerank_with_threshold(query, results, threshold=0.5, top_k=3)
     print(f"Filtered to {len(filtered)} results above threshold\n")
     for i, result in enumerate(filtered, 1):

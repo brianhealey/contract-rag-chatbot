@@ -5,7 +5,6 @@ Enhanced interactive chatbot with query enhancement and document filtering.
 
 import argparse
 import sys
-from typing import Optional
 
 from src.chatbot.contract_chatbot import ContractChatbot
 from src.retrieval.query_enhancer import QueryEnhancer
@@ -48,27 +47,29 @@ def print_info(chatbot: ContractChatbot):
 
     # Vector store info
     vs_info = chatbot.vector_store.get_collection_info()
-    print(f"\nVector Store:")
+    print("\nVector Store:")
     print(f"  Collection: {settings.qdrant.collection_name}")
     print(f"  Status: {vs_info.get('status', 'Unknown')}")
     print(f"  Documents: {vs_info.get('points_count', 0)} chunks")
 
     # Model info
-    print(f"\nModels:")
+    print("\nModels:")
     print(f"  Embedding: {settings.embedding.model_name}")
-    print(f"  Reranking: {settings.rerank.model_name if chatbot.use_reranking else 'Disabled'}")
+    print(
+        f"  Reranking: {settings.rerank.model_name if chatbot.use_reranking else 'Disabled'}"
+    )
     print(f"  LLM: {settings.ollama.model}")
 
     # Cache info
     if chatbot.query_cache:
         cache_info = chatbot.query_cache.get_cache_info()
-        print(f"\nQuery Cache:")
+        print("\nQuery Cache:")
         print(f"  Enabled: {cache_info.get('enabled', False)}")
         print(f"  Size: {cache_info.get('size', 0)} entries")
         print(f"  TTL: {cache_info.get('ttl', 0)}s")
 
     # Retrieval settings
-    print(f"\nRetrieval Settings:")
+    print("\nRetrieval Settings:")
     print(f"  Top-k: {settings.retrieval.top_k}")
     print(f"  Rerank top-k: {settings.retrieval.rerank_top_k}")
     print(f"  Hybrid alpha: {settings.retrieval.hybrid_alpha}")
@@ -103,9 +104,7 @@ def list_documents(doc_filter: DocumentFilter):
 
 
 def compare_documents_mode(
-    chatbot: ContractChatbot,
-    doc_filter: DocumentFilter,
-    documents: list
+    chatbot: ContractChatbot, doc_filter: DocumentFilter, documents: list
 ):
     """Run document comparison mode."""
     print("\n" + "=" * 70)
@@ -136,7 +135,7 @@ def compare_documents_mode(
         doc1 = documents[doc1_idx]
         doc2 = documents[doc2_idx]
 
-        print(f"\nComparing:")
+        print("\nComparing:")
         print(f"  Document 1: {doc1['source_file']}")
         print(f"  Document 2: {doc2['source_file']}")
 
@@ -147,14 +146,12 @@ def compare_documents_mode(
             return
 
         # Create filters
-        filter1 = {'source_file': doc1['source_file']}
-        filter2 = {'source_file': doc2['source_file']}
+        filter1 = {"source_file": doc1["source_file"]}
+        filter2 = {"source_file": doc2["source_file"]}
 
         # Compare
         print("\nSearching both documents...")
-        comparison = doc_filter.compare_documents(
-            filter1, filter2, query, top_k=3
-        )
+        comparison = doc_filter.compare_documents(filter1, filter2, query, top_k=3)
 
         # Show results
         print("\n" + "=" * 70)
@@ -162,17 +159,21 @@ def compare_documents_mode(
         print("=" * 70)
 
         print(f"\n--- {doc1['source_file']} ---")
-        if comparison['document1']['results']:
-            for i, result in enumerate(comparison['document1']['results'], 1):
-                print(f"\n[{i}] Score: {result['score']:.4f} | Chunk {result.get('chunk_index', '?')}")
+        if comparison["document1"]["results"]:
+            for i, result in enumerate(comparison["document1"]["results"], 1):
+                print(
+                    f"\n[{i}] Score: {result['score']:.4f} | Chunk {result.get('chunk_index', '?')}"
+                )
                 print(f"    {result['text'][:200]}...")
         else:
             print("No matching passages found.")
 
         print(f"\n--- {doc2['source_file']} ---")
-        if comparison['document2']['results']:
-            for i, result in enumerate(comparison['document2']['results'], 1):
-                print(f"\n[{i}] Score: {result['score']:.4f} | Chunk {result.get('chunk_index', '?')}")
+        if comparison["document2"]["results"]:
+            for i, result in enumerate(comparison["document2"]["results"], 1):
+                print(
+                    f"\n[{i}] Score: {result['score']:.4f} | Chunk {result.get('chunk_index', '?')}"
+                )
                 print(f"    {result['text'][:200]}...")
         else:
             print("No matching passages found.")
@@ -184,9 +185,7 @@ def compare_documents_mode(
 
 
 def interactive_mode(
-    chatbot: ContractChatbot,
-    show_sources: bool = True,
-    use_enhancement: bool = False
+    chatbot: ContractChatbot, show_sources: bool = True, use_enhancement: bool = False
 ):
     """
     Run the chatbot in interactive mode with enhanced features.
@@ -200,7 +199,7 @@ def interactive_mode(
 
     # Check if index exists
     vs_info = chatbot.vector_store.get_collection_info()
-    if not vs_info.get('exists') or vs_info.get('points_count', 0) == 0:
+    if not vs_info.get("exists") or vs_info.get("points_count", 0) == 0:
         print("ERROR: No documents indexed!")
         print("Please run 'python build_index.py' first to index your documents.")
         print()
@@ -225,19 +224,19 @@ def interactive_mode(
             # Handle commands
             question_lower = question.lower()
 
-            if question_lower in ['exit', 'quit', 'q']:
+            if question_lower in ["exit", "quit", "q"]:
                 print("\nGoodbye!")
                 break
 
-            if question_lower in ['help', 'h', '?']:
+            if question_lower in ["help", "h", "?"]:
                 print_help()
                 continue
 
-            if question_lower == 'info':
+            if question_lower == "info":
                 print_info(chatbot)
                 continue
 
-            if question_lower == 'clear':
+            if question_lower == "clear":
                 if chatbot.query_cache:
                     chatbot.query_cache.clear()
                     print("\nQuery cache cleared.")
@@ -245,34 +244,34 @@ def interactive_mode(
                     print("\nQuery cache is disabled.")
                 continue
 
-            if question_lower == 'docs':
+            if question_lower == "docs":
                 documents = list_documents(doc_filter)
                 continue
 
-            if question_lower.startswith('filter '):
+            if question_lower.startswith("filter "):
                 filename = question[7:].strip()
-                current_filter = {'source_file': filename}
+                current_filter = {"source_file": filename}
                 print(f"\nFiltering to: {filename}")
                 continue
 
-            if question_lower == 'unfilter':
+            if question_lower == "unfilter":
                 current_filter = None
                 print("\nFilter removed.")
                 continue
 
-            if question_lower == 'compare':
+            if question_lower == "compare":
                 if documents is None:
                     documents = doc_filter.list_documents()
                 compare_documents_mode(chatbot, doc_filter, documents)
                 continue
 
-            if question_lower == 'enhance on':
+            if question_lower == "enhance on":
                 use_enhancement = True
                 query_enhancer = QueryEnhancer()
                 print("\nQuery enhancement enabled.")
                 continue
 
-            if question_lower == 'enhance off':
+            if question_lower == "enhance off":
                 use_enhancement = False
                 query_enhancer = None
                 print("\nQuery enhancement disabled.")
@@ -282,7 +281,9 @@ def interactive_mode(
             print()
             if use_enhancement and query_enhancer:
                 print("Enhancing query...")
-                enhanced = query_enhancer.generate_multi_queries(question, num_queries=3)
+                enhanced = query_enhancer.generate_multi_queries(
+                    question, num_queries=3
+                )
                 print(f"Generated {len(enhanced)} query variations.")
                 print()
 
@@ -290,24 +291,25 @@ def interactive_mode(
                 all_results = []
                 for q in enhanced:
                     results = chatbot.retrieve_context(
-                        q,
-                        filter_conditions=current_filter
+                        q, filter_conditions=current_filter
                     )
                     all_results.extend(results)
 
                 # Deduplicate by ID and keep highest scores
                 seen_ids = {}
                 for result in all_results:
-                    rid = result['id']
-                    if rid not in seen_ids or result.get('rerank_score', 0) > seen_ids[rid].get('rerank_score', 0):
+                    rid = result["id"]
+                    if rid not in seen_ids or result.get("rerank_score", 0) > seen_ids[
+                        rid
+                    ].get("rerank_score", 0):
                         seen_ids[rid] = result
 
                 passages = list(seen_ids.values())
                 passages.sort(
-                    key=lambda x: x.get('rerank_score', x.get('hybrid_score', 0)),
-                    reverse=True
+                    key=lambda x: x.get("rerank_score", x.get("hybrid_score", 0)),
+                    reverse=True,
                 )
-                passages = passages[:settings.retrieval.rerank_top_k]
+                passages = passages[: settings.retrieval.rerank_top_k]
 
                 # Generate response with original question
                 response = chatbot.generate_response(question, passages)
@@ -315,7 +317,7 @@ def interactive_mode(
                 response = chatbot.ask(
                     question,
                     filter_conditions=current_filter,
-                    return_passages=show_sources
+                    return_passages=show_sources,
                 )
 
             # Print answer
@@ -353,6 +355,7 @@ def interactive_mode(
         except Exception as e:
             print(f"\nError: {e}")
             import traceback
+
             traceback.print_exc()
             print()
 
@@ -363,45 +366,27 @@ def main():
     )
 
     parser.add_argument(
-        "-q", "--question",
-        type=str,
-        help="Ask a single question and exit"
+        "-q", "--question", type=str, help="Ask a single question and exit"
     )
 
     parser.add_argument(
-        "--no-sources",
-        action="store_true",
-        help="Don't show source passages"
+        "--no-sources", action="store_true", help="Don't show source passages"
+    )
+
+    parser.add_argument("--no-rerank", action="store_true", help="Disable re-ranking")
+
+    parser.add_argument("--no-cache", action="store_true", help="Disable query caching")
+
+    parser.add_argument(
+        "--enhance", action="store_true", help="Enable query enhancement (multi-query)"
     )
 
     parser.add_argument(
-        "--no-rerank",
-        action="store_true",
-        help="Disable re-ranking"
+        "--filter", type=str, help="Filter to specific document (filename)"
     )
 
     parser.add_argument(
-        "--no-cache",
-        action="store_true",
-        help="Disable query caching"
-    )
-
-    parser.add_argument(
-        "--enhance",
-        action="store_true",
-        help="Enable query enhancement (multi-query)"
-    )
-
-    parser.add_argument(
-        "--filter",
-        type=str,
-        help="Filter to specific document (filename)"
-    )
-
-    parser.add_argument(
-        "--list-docs",
-        action="store_true",
-        help="List all documents and exit"
+        "--list-docs", action="store_true", help="List all documents and exit"
     )
 
     args = parser.parse_args()
@@ -410,8 +395,7 @@ def main():
         # Initialize chatbot
         print("Initializing chatbot...")
         chatbot = ContractChatbot(
-            use_reranking=not args.no_rerank,
-            use_cache=not args.no_cache
+            use_reranking=not args.no_rerank, use_cache=not args.no_cache
         )
 
         # List documents mode
@@ -424,12 +408,12 @@ def main():
         if args.question:
             filter_cond = None
             if args.filter:
-                filter_cond = {'source_file': args.filter}
+                filter_cond = {"source_file": args.filter}
 
             response = chatbot.ask(
                 args.question,
                 filter_conditions=filter_cond,
-                return_passages=not args.no_sources
+                return_passages=not args.no_sources,
             )
 
             print(response["answer"])
@@ -442,9 +426,7 @@ def main():
         else:
             # Interactive mode
             interactive_mode(
-                chatbot,
-                show_sources=not args.no_sources,
-                use_enhancement=args.enhance
+                chatbot, show_sources=not args.no_sources, use_enhancement=args.enhance
             )
 
     except KeyboardInterrupt:
@@ -452,6 +434,7 @@ def main():
     except Exception as e:
         print(f"\nError: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
 

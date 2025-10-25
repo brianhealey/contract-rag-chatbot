@@ -6,7 +6,6 @@ Parses documents, chunks them, generates embeddings, and builds vector and BM25 
 """
 
 import argparse
-from pathlib import Path
 
 from src.parsers.document_parser import DocumentParser
 from src.parsers.chunker import DocumentChunker
@@ -17,9 +16,7 @@ from config.settings import settings, setup_directories
 
 
 def build_index(
-    documents_dir: str = None,
-    rebuild: bool = False,
-    recursive: bool = False
+    documents_dir: str = None, rebuild: bool = False, recursive: bool = False
 ):
     """
     Build all indices from documents.
@@ -55,10 +52,7 @@ def build_index(
     print(f"\n[2/6] Parsing documents from {documents_dir}...")
     print(f"Supported formats: {', '.join(settings.document.supported_formats)}")
 
-    documents = parser.parse_directory(
-        directory=documents_dir,
-        recursive=recursive
-    )
+    documents = parser.parse_directory(directory=documents_dir, recursive=recursive)
 
     if not documents:
         print("\nNo documents found!")
@@ -69,16 +63,11 @@ def build_index(
     print(f"\nParsed {len(documents)} document(s)")
 
     # Chunk documents
-    print(f"\n[3/6] Chunking documents...")
+    print("\n[3/6] Chunking documents...")
     print(f"Chunk size: {chunker.chunk_size}, Overlap: {chunker.chunk_overlap}")
 
     doc_dicts = [
-        {
-            "id": doc.id,
-            "text": doc.text,
-            "metadata": doc.metadata
-        }
-        for doc in documents
+        {"id": doc.id, "text": doc.text, "metadata": doc.metadata} for doc in documents
     ]
 
     chunks = chunker.chunk_documents(doc_dicts)
@@ -95,14 +84,14 @@ def build_index(
         print(f"  {doc_name}: {count} chunks")
 
     # Generate embeddings
-    print(f"\n[4/6] Generating embeddings...")
+    print("\n[4/6] Generating embeddings...")
     chunk_texts = [chunk.text for chunk in chunks]
     embeddings = embedder.embed_batch(chunk_texts, show_progress=True)
 
     print(f"Generated {len(embeddings)} embeddings")
 
     # Build vector store
-    print(f"\n[5/6] Building vector store...")
+    print("\n[5/6] Building vector store...")
 
     chunk_ids = [chunk.id for chunk in chunks]
     chunk_payloads = [
@@ -110,7 +99,7 @@ def build_index(
             "text": chunk.text,
             "chunk_index": chunk.chunk_index,
             "document_id": chunk.document_id,
-            **chunk.metadata
+            **chunk.metadata,
         }
         for chunk in chunks
     ]
@@ -118,13 +107,10 @@ def build_index(
     vector_store.add_documents(chunk_ids, embeddings, chunk_payloads)
 
     # Build BM25 index
-    print(f"\n[6/6] Building BM25 index...")
+    print("\n[6/6] Building BM25 index...")
     hybrid_search = HybridSearch(embedder=embedder, vector_store=vector_store)
 
-    bm25_docs = [
-        {"id": chunk.id, "text": chunk.text}
-        for chunk in chunks
-    ]
+    bm25_docs = [{"id": chunk.id, "text": chunk.text} for chunk in chunks]
 
     hybrid_search.build_bm25_index(bm25_docs, save=True)
 
@@ -154,19 +140,19 @@ def main():
         "--documents-dir",
         type=str,
         default=None,
-        help=f"Directory containing documents (default: {settings.document.documents_dir})"
+        help=f"Directory containing documents (default: {settings.document.documents_dir})",
     )
 
     parser.add_argument(
         "--rebuild",
         action="store_true",
-        help="Rebuild from scratch (delete existing collection)"
+        help="Rebuild from scratch (delete existing collection)",
     )
 
     parser.add_argument(
         "--recursive",
         action="store_true",
-        help="Search for documents recursively in subdirectories"
+        help="Search for documents recursively in subdirectories",
     )
 
     args = parser.parse_args()
@@ -175,13 +161,14 @@ def main():
         build_index(
             documents_dir=args.documents_dir,
             rebuild=args.rebuild,
-            recursive=args.recursive
+            recursive=args.recursive,
         )
     except KeyboardInterrupt:
         print("\n\nBuild interrupted by user")
     except Exception as e:
         print(f"\n\nError during index build: {e}")
         import traceback
+
         traceback.print_exc()
         exit(1)
 

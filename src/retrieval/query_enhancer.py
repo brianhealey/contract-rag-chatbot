@@ -7,7 +7,7 @@ Implements multiple strategies:
 - HyDE: Hypothetical Document Embeddings
 """
 
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 import ollama
 
 from config.settings import settings
@@ -23,7 +23,7 @@ class QueryEnhancer:
         model: str = None,
         enable_multi_query: bool = True,
         enable_expansion: bool = True,
-        enable_hyde: bool = False
+        enable_hyde: bool = False,
     ):
         """
         Initialize query enhancer.
@@ -39,11 +39,7 @@ class QueryEnhancer:
         self.enable_expansion = enable_expansion
         self.enable_hyde = enable_hyde
 
-    def generate_multi_queries(
-        self,
-        query: str,
-        num_queries: int = 3
-    ) -> List[str]:
+    def generate_multi_queries(self, query: str, num_queries: int = 3) -> List[str]:
         """
         Generate multiple variations of a query for better coverage.
 
@@ -72,17 +68,18 @@ Alternative questions:"""
             response = ollama.chat(
                 model=self.model,
                 messages=[{"role": "user", "content": prompt}],
-                options={"temperature": 0.7}
+                options={"temperature": 0.7},
             )
 
             variations = [
                 line.strip()
-                for line in response["message"]["content"].strip().split('\n')
-                if line.strip() and not line.strip().startswith(('-', '*', '1', '2', '3', '4', '5'))
+                for line in response["message"]["content"].strip().split("\n")
+                if line.strip()
+                and not line.strip().startswith(("-", "*", "1", "2", "3", "4", "5"))
             ]
 
             # Return original + variations
-            return [query] + variations[:num_queries - 1]
+            return [query] + variations[: num_queries - 1]
 
         except Exception as e:
             print(f"Warning: Multi-query generation failed: {e}")
@@ -116,7 +113,7 @@ Expanded query:"""
             response = ollama.chat(
                 model=self.model,
                 messages=[{"role": "user", "content": prompt}],
-                options={"temperature": 0.3}
+                options={"temperature": 0.3},
             )
 
             expanded = response["message"]["content"].strip()
@@ -157,7 +154,7 @@ Passage:"""
             response = ollama.chat(
                 model=self.model,
                 messages=[{"role": "user", "content": prompt}],
-                options={"temperature": 0.5}
+                options={"temperature": 0.5},
             )
 
             hyde_answer = response["message"]["content"].strip()
@@ -167,11 +164,7 @@ Passage:"""
             print(f"Warning: HyDE generation failed: {e}")
             return query
 
-    def enhance_query(
-        self,
-        query: str,
-        strategy: str = "auto"
-    ) -> Dict[str, Any]:
+    def enhance_query(self, query: str, strategy: str = "auto") -> Dict[str, Any]:
         """
         Enhance a query using configured strategies.
 
@@ -182,11 +175,7 @@ Passage:"""
         Returns:
             Dictionary with enhanced queries and metadata
         """
-        result = {
-            "original": query,
-            "queries": [query],
-            "strategy": strategy
-        }
+        result = {"original": query, "queries": [query], "strategy": strategy}
 
         if strategy == "auto":
             # Use all enabled strategies
@@ -219,13 +208,13 @@ def main():
     test_queries = [
         "What are the payment terms?",
         "How can the contract be terminated?",
-        "What are the confidentiality obligations?"
+        "What are the confidentiality obligations?",
     ]
 
     for query in test_queries:
         print(f"\n{'=' * 70}")
         print(f"Original Query: {query}")
-        print('=' * 70)
+        print("=" * 70)
 
         # Test multi-query
         print("\n--- Multi-Query Variations ---")

@@ -3,7 +3,7 @@ Embedding generation module with disk caching support.
 """
 
 import hashlib
-from typing import List, Union
+from typing import List
 import numpy as np
 from sentence_transformers import SentenceTransformer
 from diskcache import Cache
@@ -24,7 +24,7 @@ class Embedder:
         model_name: str = None,
         cache_dir: str = None,
         device: str = None,
-        batch_size: int = None
+        batch_size: int = None,
     ):
         """
         Initialize the embedder with caching.
@@ -85,15 +85,14 @@ class Embedder:
 
         # Cache the result
         if use_cache:
-            self.cache.set(cache_key, embedding.tolist(), expire=settings.cache.embedding_cache_ttl)
+            self.cache.set(
+                cache_key, embedding.tolist(), expire=settings.cache.embedding_cache_ttl
+            )
 
         return embedding
 
     def embed_batch(
-        self,
-        texts: List[str],
-        use_cache: bool = True,
-        show_progress: bool = True
+        self, texts: List[str], use_cache: bool = True, show_progress: bool = True
     ) -> List[np.ndarray]:
         """
         Generate embeddings for a batch of texts with caching.
@@ -141,14 +140,14 @@ class Embedder:
             for i in tqdm(
                 range(0, len(uncached_texts), self.batch_size),
                 disable=not show_progress,
-                desc="Encoding"
+                desc="Encoding",
             ):
-                batch = uncached_texts[i:i + self.batch_size]
+                batch = uncached_texts[i : i + self.batch_size]
                 batch_embeddings = self.model.encode(
                     batch,
                     batch_size=len(batch),
                     convert_to_numpy=True,
-                    show_progress_bar=False
+                    show_progress_bar=False,
                 )
                 new_embeddings.extend(batch_embeddings)
 
@@ -159,7 +158,7 @@ class Embedder:
                     self.cache.set(
                         cache_key,
                         embedding.tolist(),
-                        expire=settings.cache.embedding_cache_ttl
+                        expire=settings.cache.embedding_cache_ttl,
                     )
 
             # Add to results with correct indices
@@ -184,7 +183,7 @@ class Embedder:
         return {
             "size": len(self.cache),
             "directory": self.cache_dir,
-            "model": self.model_name
+            "model": self.model_name,
         }
 
 
@@ -206,7 +205,7 @@ def main():
         "The party agrees to pay within 30 days.",
         "This agreement is governed by the laws of California.",
         "Either party may terminate this agreement with written notice.",
-        "Confidential information must not be disclosed to third parties."
+        "Confidential information must not be disclosed to third parties.",
     ]
     embeddings = embedder.embed_batch(texts)
     print(f"Generated {len(embeddings)} embeddings")

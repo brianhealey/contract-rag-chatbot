@@ -40,27 +40,29 @@ def print_info(chatbot: ContractChatbot):
 
     # Vector store info
     vs_info = chatbot.vector_store.get_collection_info()
-    print(f"\nVector Store:")
+    print("\nVector Store:")
     print(f"  Collection: {settings.qdrant.collection_name}")
     print(f"  Status: {vs_info.get('status', 'Unknown')}")
     print(f"  Documents: {vs_info.get('points_count', 0)} chunks")
 
     # Model info
-    print(f"\nModels:")
+    print("\nModels:")
     print(f"  Embedding: {settings.embedding.model_name}")
-    print(f"  Reranking: {settings.rerank.model_name if chatbot.use_reranking else 'Disabled'}")
+    print(
+        f"  Reranking: {settings.rerank.model_name if chatbot.use_reranking else 'Disabled'}"
+    )
     print(f"  LLM: {settings.ollama.model}")
 
     # Cache info
     if chatbot.query_cache:
         cache_info = chatbot.query_cache.get_cache_info()
-        print(f"\nQuery Cache:")
+        print("\nQuery Cache:")
         print(f"  Enabled: {cache_info.get('enabled', False)}")
         print(f"  Size: {cache_info.get('size', 0)} entries")
         print(f"  TTL: {cache_info.get('ttl', 0)}s")
 
     # Retrieval settings
-    print(f"\nRetrieval Settings:")
+    print("\nRetrieval Settings:")
     print(f"  Top-k: {settings.retrieval.top_k}")
     print(f"  Rerank top-k: {settings.retrieval.rerank_top_k}")
     print(f"  Hybrid alpha: {settings.retrieval.hybrid_alpha}")
@@ -81,7 +83,7 @@ def interactive_mode(chatbot: ContractChatbot, show_sources: bool = True):
 
     # Check if index exists
     vs_info = chatbot.vector_store.get_collection_info()
-    if not vs_info.get('exists') or vs_info.get('points_count', 0) == 0:
+    if not vs_info.get("exists") or vs_info.get("points_count", 0) == 0:
         print("ERROR: No documents indexed!")
         print("Please run 'python build_index.py' first to index your documents.")
         print()
@@ -100,19 +102,19 @@ def interactive_mode(chatbot: ContractChatbot, show_sources: bool = True):
             # Handle commands
             question_lower = question.lower()
 
-            if question_lower in ['exit', 'quit', 'q']:
+            if question_lower in ["exit", "quit", "q"]:
                 print("\nGoodbye!")
                 break
 
-            if question_lower in ['help', 'h', '?']:
+            if question_lower in ["help", "h", "?"]:
                 print_help()
                 continue
 
-            if question_lower == 'info':
+            if question_lower == "info":
                 print_info(chatbot)
                 continue
 
-            if question_lower == 'clear':
+            if question_lower == "clear":
                 if chatbot.query_cache:
                     chatbot.query_cache.clear()
                 else:
@@ -155,11 +157,14 @@ def interactive_mode(chatbot: ContractChatbot, show_sources: bool = True):
         except Exception as e:
             print(f"\nError: {e}")
             import traceback
+
             traceback.print_exc()
             print()
 
 
-def single_query_mode(chatbot: ContractChatbot, question: str, show_sources: bool = True):
+def single_query_mode(
+    chatbot: ContractChatbot, question: str, show_sources: bool = True
+):
     """
     Answer a single question and exit.
 
@@ -170,7 +175,7 @@ def single_query_mode(chatbot: ContractChatbot, question: str, show_sources: boo
     """
     # Check if index exists
     vs_info = chatbot.vector_store.get_collection_info()
-    if not vs_info.get('exists') or vs_info.get('points_count', 0) == 0:
+    if not vs_info.get("exists") or vs_info.get("points_count", 0) == 0:
         print("ERROR: No documents indexed!")
         print("Please run 'python build_index.py' first to index your documents.")
         sys.exit(1)
@@ -195,28 +200,16 @@ def main():
     )
 
     parser.add_argument(
-        "-q", "--question",
-        type=str,
-        help="Ask a single question and exit"
+        "-q", "--question", type=str, help="Ask a single question and exit"
     )
 
     parser.add_argument(
-        "--no-sources",
-        action="store_true",
-        help="Don't show source passages"
+        "--no-sources", action="store_true", help="Don't show source passages"
     )
 
-    parser.add_argument(
-        "--no-rerank",
-        action="store_true",
-        help="Disable re-ranking"
-    )
+    parser.add_argument("--no-rerank", action="store_true", help="Disable re-ranking")
 
-    parser.add_argument(
-        "--no-cache",
-        action="store_true",
-        help="Disable query caching"
-    )
+    parser.add_argument("--no-cache", action="store_true", help="Disable query caching")
 
     args = parser.parse_args()
 
@@ -224,28 +217,21 @@ def main():
         # Initialize chatbot
         print("Initializing chatbot...")
         chatbot = ContractChatbot(
-            use_reranking=not args.no_rerank,
-            use_cache=not args.no_cache
+            use_reranking=not args.no_rerank, use_cache=not args.no_cache
         )
 
         # Run in appropriate mode
         if args.question:
-            single_query_mode(
-                chatbot,
-                args.question,
-                show_sources=not args.no_sources
-            )
+            single_query_mode(chatbot, args.question, show_sources=not args.no_sources)
         else:
-            interactive_mode(
-                chatbot,
-                show_sources=not args.no_sources
-            )
+            interactive_mode(chatbot, show_sources=not args.no_sources)
 
     except KeyboardInterrupt:
         print("\n\nInterrupted by user")
     except Exception as e:
         print(f"\nError: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
 

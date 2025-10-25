@@ -25,7 +25,7 @@ class ContractChatbot:
         embedder: Embedder = None,
         vector_store: VectorStore = None,
         use_reranking: bool = None,
-        use_cache: bool = None
+        use_cache: bool = None,
     ):
         """
         Initialize the chatbot.
@@ -45,8 +45,7 @@ class ContractChatbot:
         )
 
         self.hybrid_search = HybridSearch(
-            embedder=self.embedder,
-            vector_store=self.vector_store
+            embedder=self.embedder, vector_store=self.vector_store
         )
 
         # Load BM25 index if it exists
@@ -55,7 +54,8 @@ class ContractChatbot:
             print("Run 'python build_index.py' to build the complete index.")
 
         self.use_reranking = (
-            use_reranking if use_reranking is not None
+            use_reranking
+            if use_reranking is not None
             else settings.retrieval.use_reranking
         )
 
@@ -65,8 +65,7 @@ class ContractChatbot:
             self.reranker = None
 
         self.use_cache = (
-            use_cache if use_cache is not None
-            else settings.cache.enable_query_cache
+            use_cache if use_cache is not None else settings.cache.enable_query_cache
         )
 
         if self.use_cache:
@@ -87,7 +86,7 @@ class ContractChatbot:
         self,
         query: str,
         top_k: int = None,
-        filter_conditions: Optional[Dict[str, Any]] = None
+        filter_conditions: Optional[Dict[str, Any]] = None,
     ) -> List[Dict[str, Any]]:
         """
         Retrieve relevant context for a query.
@@ -106,7 +105,7 @@ class ContractChatbot:
         cache_params = {
             "top_k": top_k,
             "use_reranking": self.use_reranking,
-            "filters": filter_conditions
+            "filters": filter_conditions,
         }
 
         if self.query_cache:
@@ -116,9 +115,7 @@ class ContractChatbot:
 
         # Perform hybrid search
         results = self.hybrid_search.hybrid_search(
-            query=query,
-            top_k=top_k,
-            filter_conditions=filter_conditions
+            query=query, top_k=top_k, filter_conditions=filter_conditions
         )
 
         # Re-rank if enabled
@@ -190,9 +187,7 @@ Question: {query}
 Please answer the question based on the context above. Cite specific passages using [1], [2], etc."""
 
     def generate_response(
-        self,
-        query: str,
-        passages: List[Dict[str, Any]]
+        self, query: str, passages: List[Dict[str, Any]]
     ) -> Dict[str, Any]:
         """
         Generate a response using the LLM.
@@ -217,11 +212,9 @@ Please answer the question based on the context above. Cite specific passages us
                 model=self.ollama_model,
                 messages=[
                     {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt}
+                    {"role": "user", "content": user_prompt},
                 ],
-                options={
-                    "temperature": self.temperature
-                }
+                options={"temperature": self.temperature},
             )
 
             answer = response["message"]["content"]
@@ -230,7 +223,7 @@ Please answer the question based on the context above. Cite specific passages us
                 "answer": answer,
                 "passages": passages,
                 "num_passages": len(passages),
-                "query": query
+                "query": query,
             }
 
         except Exception as e:
@@ -239,7 +232,7 @@ Please answer the question based on the context above. Cite specific passages us
                 "passages": passages,
                 "num_passages": len(passages),
                 "query": query,
-                "error": str(e)
+                "error": str(e),
             }
 
     def ask(
@@ -247,7 +240,7 @@ Please answer the question based on the context above. Cite specific passages us
         query: str,
         top_k: int = None,
         filter_conditions: Optional[Dict[str, Any]] = None,
-        return_passages: bool = True
+        return_passages: bool = True,
     ) -> Dict[str, Any]:
         """
         Ask a question and get an answer with context.
@@ -284,11 +277,11 @@ def main():
 
         # Get collection info
         info = chatbot.vector_store.get_collection_info()
-        print(f"\nVector store status:")
+        print("\nVector store status:")
         print(f"  Collection exists: {info.get('exists', False)}")
         print(f"  Document count: {info.get('points_count', 0)}")
 
-        if not info.get('exists') or info.get('points_count', 0) == 0:
+        if not info.get("exists") or info.get("points_count", 0) == 0:
             print("\nNo documents indexed. Please run build_index.py first.")
             return
 
@@ -321,6 +314,7 @@ def main():
     except Exception as e:
         print(f"Error: {e}")
         import traceback
+
         traceback.print_exc()
 
 
